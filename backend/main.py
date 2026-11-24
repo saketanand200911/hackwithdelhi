@@ -7,6 +7,7 @@ import os
 import json
 import csv
 import io
+import base64
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -177,6 +178,7 @@ async def extract_and_verify(
 ):
     bill_data = None
     preview_svg = None
+    preview_image = None
 
     if sample_id:
         sample = next((s for s in SAMPLE_FIXTURES if s["id"] == sample_id), None)
@@ -188,6 +190,9 @@ async def extract_and_verify(
     elif file:
         content = await file.read()
         bill_data = ollama_extractor.extract_from_image(content)
+        b64_content = base64.b64encode(content).decode("utf-8")
+        mime = file.content_type or "image/jpeg"
+        preview_image = f"data:{mime};base64,{b64_content}"
     else:
         raise HTTPException(status_code=400, detail="Either file or sample_id required")
 
@@ -197,7 +202,8 @@ async def extract_and_verify(
     response_payload = {
         **audit_result,
         "extracted_raw": bill_data,
-        "preview_svg": preview_svg
+        "preview_svg": preview_svg,
+        "preview_image": preview_image
     }
 
     # Store in session buckets

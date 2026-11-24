@@ -100,6 +100,7 @@ interface BillAuditResult {
     place_of_supply: string;
   };
   preview_svg?: string;
+  preview_image?: string;
   extracted_raw?: any;
 }
 
@@ -108,6 +109,7 @@ const API_BASE = "http://127.0.0.1:8000";
 export default function ScannerPage() {
   const [activeBill, setActiveBill] = useState<BillAuditResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [showVoiceModal, setShowVoiceModal] = useState<boolean>(false);
   const [isListening, setIsListening] = useState<boolean>(false);
@@ -119,6 +121,7 @@ export default function ScannerPage() {
   // Load Demo Bill (explicitly triggered by user)
   const handleLoadDemo = async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       const formData = new FormData();
       formData.append("sample_id", "sample-1-hardware-flawed");
@@ -129,9 +132,12 @@ export default function ScannerPage() {
       if (res.ok) {
         const data: BillAuditResult = await res.json();
         setActiveBill(data);
+      } else {
+        setErrorMessage("Demo load error: " + (await res.text()));
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setErrorMessage("Network error connecting to backend: " + (e?.message || ""));
     } finally {
       setLoading(false);
     }
@@ -140,11 +146,13 @@ export default function ScannerPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (e.target) e.target.value = "";
     uploadFileProcess(file);
   };
 
   const uploadFileProcess = async (file: File) => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -155,9 +163,14 @@ export default function ScannerPage() {
       if (res.ok) {
         const data: BillAuditResult = await res.json();
         setActiveBill(data);
+      } else {
+        const errText = await res.text();
+        console.error("Upload failed:", errText);
+        setErrorMessage("Parcha read karne me samasya aayi. Kripya saaf photo upload karein ya demo bill check karein.");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setErrorMessage("Backend server se connect nahi ho paya: " + (e?.message || ""));
     } finally {
       setLoading(false);
     }
@@ -339,6 +352,19 @@ export default function ScannerPage() {
               </p>
             </div>
 
+            {/* Error Notice */}
+            {errorMessage && (
+              <div className="w-full p-4 bg-red-950/40 border border-red-500/40 rounded-2xl text-red-300 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-lg animate-in fade-in">
+                <span>{errorMessage}</span>
+                <button
+                  onClick={() => setErrorMessage(null)}
+                  className="px-2 py-1 bg-red-900/50 hover:bg-red-800 rounded-lg text-white font-bold text-xs"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
             {/* Big Interactive Scanner Drop Zone */}
             <div
               onDragEnter={handleDrag}
@@ -467,6 +493,14 @@ export default function ScannerPage() {
                       className="w-full h-full max-h-[560px] flex items-center justify-center rounded overflow-hidden"
                       dangerouslySetInnerHTML={{ __html: activeBill.preview_svg }}
                     />
+                  ) : activeBill.preview_image ? (
+                    <div className="w-full h-full max-h-[560px] flex items-center justify-center rounded overflow-hidden p-2">
+                      <img
+                        src={activeBill.preview_image}
+                        alt="Uploaded Slip"
+                        className="max-h-[540px] max-w-full object-contain rounded-lg shadow-md"
+                      />
+                    </div>
                   ) : (
                     <div className="text-center p-8 text-slate-500 text-xs">
                       <Receipt className="w-12 h-12 mx-auto mb-2 text-slate-700" />
