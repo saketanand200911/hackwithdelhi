@@ -1,0 +1,513 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Kachha2GST</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+Devanagari:wght@400;500&display=swap">
+<style>
+/* Layout: fixed forest-green sidebar + working canvas. Cards only where an object needs separating; status is carried by pill shape + text, never colour alone. */
+:root{
+  --bg:#F8F9F6; --surface:#FFFFFF; --ink:#15251D; --muted:#5C6E63; --line:#E0E6DE; --soft:#EEF2EC;
+  --accent:#145C43; --accent2:#20A574; --on-accent:#FFFFFF; --side:#145C43; --side-ink:#E6F3EC; --side-muted:#9CC7B4;
+  --ok:#1B7F52; --ok-bg:#E3F3EA; --warn:#8A5A00; --warn-bg:#FBF0D5; --bad:#B3261E; --bad-bg:#FBE4E1;
+  --bar1:#145C43; --bar2:#7FD1AE; --focus:#20A574;
+  --f-body:'Inter',system-ui,-apple-system,'Segoe UI','Noto Sans Devanagari',sans-serif;
+  --f-head:'Space Grotesk','Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D1914; --surface:#14241D; --ink:#E7EFEA; --muted:#93A89C; --line:#25382F; --soft:#1A2D25;
+  --accent:#3DC890; --accent2:#3DC890; --on-accent:#08241A; --side:#0A2018; --side-ink:#DDEEE5; --side-muted:#7FA896;
+  --ok:#5FD39E; --ok-bg:#16382A; --warn:#E5B44E; --warn-bg:#3A2F12; --bad:#FF8A80; --bad-bg:#40201D;
+  --bar1:#3DC890; --bar2:#1F6B4E; --focus:#3DC890; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1914; --surface:#14241D; --ink:#E7EFEA; --muted:#93A89C; --line:#25382F; --soft:#1A2D25;
+  --accent:#3DC890; --accent2:#3DC890; --on-accent:#08241A; --side:#0A2018; --side-ink:#DDEEE5; --side-muted:#7FA896;
+  --ok:#5FD39E; --ok-bg:#16382A; --warn:#E5B44E; --warn-bg:#3A2F12; --bad:#FF8A80; --bad-bg:#40201D;
+  --bar1:#3DC890; --bar2:#1F6B4E; --focus:#3DC890; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+h1,h2,h3{font-family:var(--f-head);margin:0;text-wrap:balance;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.side{background:var(--side);color:var(--side-ink);padding:20px 12px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:18px}
+.brand{padding:0 8px}
+.brand b{font-family:var(--f-head);font-size:20px;letter-spacing:-.02em;display:block}
+.brand b i{font-style:normal;color:#7FE0B5}
+.brand span{font-size:11.5px;color:var(--side-muted);display:block;margin-top:2px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--side-muted);padding:9px 10px;border-radius:8px;cursor:pointer;text-align:left;width:100%}
+.nav button:hover{background:rgba(255,255,255,.07);color:var(--side-ink)}
+.nav button[aria-current="page"]{background:rgba(255,255,255,.14);color:#fff}
+.nav svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav .bd{margin-left:auto;font-size:11px;background:#E8553F;color:#fff;border-radius:99px;padding:0 7px;min-width:20px;text-align:center}
+.nav .bd:empty{display:none}
+.demo{margin-top:auto;font-size:11.5px;color:var(--side-muted);border-top:1px solid rgba(255,255,255,.14);padding:12px 8px 0}
+.demo b{color:var(--side-ink);display:block;margin-bottom:2px;font-weight:600}
+.main{padding-block:28px 64px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));min-width:0;max-width:1180px;width:100%}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.ph h1{font-size:26px}
+.ph p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.card h2{font-size:15px;margin-bottom:12px}
+.card h2 small{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mt{margin-top:16px}
+.kpi{display:flex;flex-direction:column;gap:4px}
+.kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.kpi .v{font-family:var(--f-head);font-size:25px;font-weight:600;letter-spacing:-.02em}
+.kpi .s{font-size:12px;color:var(--muted)}
+.kpi.bad .v{color:var(--bad)} .kpi.good .v{color:var(--ok)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.amber{background:var(--warn-bg);color:var(--warn)} .pill.red{background:var(--bad-bg);color:var(--bad)} .pill.grey{background:var(--soft);color:var(--muted)}
+.btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:9px;padding:8px 14px;font-weight:500;cursor:pointer}
+.btn:hover{filter:brightness(1.08)} .btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)} .btn.ghost:hover{background:var(--soft)}
+.btn.sm{padding:4px 10px;font-size:12.5px;border-radius:7px}
+.btn.warn{background:var(--warn-bg);color:var(--warn)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+tbody tr.click{cursor:pointer} tbody tr.click:hover{background:var(--soft)}
+.muted{color:var(--muted)} .small{font-size:12px}
+input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:0}
+input.c{padding:5px 7px;width:100%} input.w-s{width:64px} input.w-m{width:84px}
+textarea{width:100%;resize:vertical}
+.bar{display:grid;grid-template-columns:minmax(90px,150px) minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0}
+.bar .t{height:10px;background:var(--soft);border-radius:5px;overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--bar1);border-radius:5px}
+.alerts{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.alerts li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 12px;border-radius:10px;background:var(--soft)}
+.alerts li b{display:block;font-weight:500}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:34px 20px;text-align:center;background:var(--surface)}
+.drop.over{border-color:var(--accent2);background:var(--soft)}
+.drop b{font-family:var(--f-head);font-size:17px;display:block}
+.steps{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.steps li{display:flex;gap:10px;align-items:center;color:var(--muted)}
+.steps li.on{color:var(--ink)} .steps li.done{color:var(--ok)}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent2);animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.checks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.chk{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.chk b{font-weight:500}
+.chk.red{border-color:var(--bad)} .chk.amber{border-color:var(--warn)}
+.iss{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.iss:last-child{border:0}
+.iss b{font-weight:500;display:block}
+.hdr{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.hdr label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.hdr input,.hdr select{color:var(--ink);width:100%}
+.tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:14px}
+.tot div{background:var(--soft);border-radius:10px;padding:10px 12px}
+.tot span{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tot b{font-family:var(--f-head);font-size:16px}
+.split{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+.list{display:flex;flex-direction:column;max-height:76vh;overflow:auto}
+.list button{display:grid;grid-template-columns:1fr auto;gap:2px 8px;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 8px;cursor:pointer;border-radius:8px}
+.list button:hover{background:var(--soft)} .list button[aria-current="true"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent2)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input{flex:1 1 200px}
+.ring{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.score{font-family:var(--f-head);font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.empty{text-align:center;padding:34px 12px;color:var(--muted)}
+.note{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;z-index:30;font-size:13px;max-width:90vw}
+#cf{position:fixed;inset:0;pointer-events:none;z-index:40;width:100%;height:100%}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 12px;cursor:pointer;font-size:12.5px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.raw{font-family:'Noto Sans Devanagari',var(--f-body);font-size:11.5px;color:var(--muted);display:block;margin-top:2px}
+@media (max-width:980px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;flex-direction:column;padding:12px;gap:8px}
+  .nav{flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  .nav button{width:auto;white-space:nowrap}
+  .demo{display:none}
+  .g4,.g3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g21,.g2,.split{grid-template-columns:minmax(0,1fr)}
+  .checks{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .list{max-height:260px}
+  .main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+@media (max-width:520px){.g4,.g3{grid-template-columns:minmax(0,1fr)}.ph h1{font-size:22px}.bar{grid-template-columns:90px minmax(0,1fr) auto}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><b>Kachha<i>2</i>GST</b><span>From Kachha to Pakka. Every Rupee Accounted For.</span></div>
+    <nav class="nav" id="nav" aria-label="Main"></nav>
+    <div class="demo"><b>Demo mode</b>Backend not connected. Sample bills from four suppliers. Checks run in this page with a small demo HSN table, not the 14,416-entry catalog.</div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+<canvas id="cf" aria-hidden="true"></canvas>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ===== Engine: deterministic checks. No AI, no network. All money in paise (integers). ===== */
+const TODAY='2026-11-24', POS='07';
+const CH='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const fmt=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const fmt0=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n);
+const P=x=>Math.round((+x||0)*100);
+function gstCheck(b){let s=0;for(let i=0;i<14;i++){const v=CH.indexOf(b[i]);const p=v*(i%2===0?1:2);s+=Math.floor(p/36)+(p%36);}return CH[(36-(s%36))%36];}
+function gstinError(g){
+  g=(g||'').trim().toUpperCase();
+  if(!/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g)) return 'Not a valid 15-character GSTIN format.';
+  if(gstCheck(g.slice(0,14))!==g[14]) return 'Check character does not match (likely a typo or a made-up number).';
+  return null;
+}
+/* Demo slab table. Production reads india-hsn-2026.json through the backend. */
+const HSN={'7214':{d:'TMT bars (sariya)',r:18},'2523':{d:'Portland cement',r:18},'8544':{d:'Insulated wire & cable',r:18},'8536':{d:'Switches, MCBs, connectors',r:18},'7318':{d:'Screws, bolts, nuts',r:18},'7317':{d:'Nails',r:18},'1101':{d:'Wheat flour (atta)',r:5}};
+const ALIAS={sariya:'7214',saria:'7214',tmt:'7214',cement:'2523',seement:'2523',taar:'8544',tar:'8544',wire:'8544',switch:'8536',mcb:'8536',atta:'1101',aata:'1101',keel:'7317',nails:'7317',nail:'7317',bolt:'7318',nut:'7318',screw:'7318'};
+const ALIAS_NAME={'7214':'TMT Sariya','2523':'Cement','8544':'Electrical wire','8536':'Switches / MCB','1101':'Atta','7317':'Nails','7318':'Hardware (nut-bolt)'};
+function guessHsn(text){const w=(text||'').toLowerCase().split(/[^a-z]+/);for(const x of w){if(ALIAS[x])return ALIAS[x];}return '';}
+const VENDORS=[
+ {id:'sharma',name:'Sharma Traders',gstin:null,base:'07AAAPS4521K1Z'},
+ {id:'gupta',name:'Gupta Cement Agency',gstin:null,base:'09AAFCG7788M1Z'},
+ {id:'om',name:'Om Electricals',gstin:null,base:'07AABFO3345L1Z'},
+ {id:'mahadev',name:'Mahadev Steel Suppliers',gstin:null,base:'27AAECM9012P1Z'}];
+VENDORS.forEach(v=>v.gstin=v.base+gstCheck(v.base));
+const VBY=Object.fromEntries(VENDORS.map(v=>[v.id,v]));
+
+function verify(inv,list){
+  const intra=(inv.gstin||'').trim().slice(0,2)===POS||!(inv.gstin||'').trim();
+  const issues=[], li=inv.items.map(()=>[]);
+  const add=(o,line)=>{o.line=line;issues.push(o);if(line!=null)li[line].push(o);};
+  inv.items.forEach((it,i)=>{
+    const calc=P(it.q*it.r), decl=P(it.a), g=+it.g||0, tax=Math.round(decl*g/100);
+    if(calc!==decl) add({code:'math',sev:'red',title:'Quantity × rate does not match the amount',
+      detail:`${it.q} × ${fmt(it.r)} = ${fmt(calc/100)}, but the slip shows ${fmt(decl/100)} (difference ${fmt(Math.abs(decl-calc)/100)}). Tax claimed on this line: ${fmt(tax/100)}.`,
+      fix:{kind:'amount',line:i,label:`Set amount to ${fmt(calc/100)}`}},i);
+    const code=(it.h||'').trim(), h=HSN[code];
+    if(!code){const gs=guessHsn(it.n+' '+(it.raw||''));
+      add({code:'hsn',sev:'amber',title:'HSN code is missing',detail:`${it.n||'This line'} has no HSN, so the GST slab cannot be confirmed.`,
+        fix:gs?{kind:'hsn',line:i,value:gs,label:`Use ${gs} (${HSN[gs].d})`}:null},i);}
+    else if(!h) add({code:'hsn',sev:'amber',title:'HSN not found in the rate table',detail:`${code} is not in the demo table. The full catalog would be checked by the backend.`,fix:null},i);
+    else if(g!==h.r) add({code:'slab',sev:'red',title:`GST slab mismatch on ${code}`,
+      detail:`Billed at ${g}%, statutory rate for ${code} (${h.d}) is ${h.r}%. Tax claimed ${fmt(tax/100)}, expected ${fmt(Math.round(decl*h.r/100)/100)}.`,
+      fix:{kind:'gst',line:i,value:h.r,label:`Set GST to ${h.r}%`}},i);
+  });
+  const ge=gstinError(inv.gstin);
+  if(ge) add({code:'gstin',sev:'red',title:'Supplier GSTIN failed validation',detail:ge+' ITC cannot be claimed against an invalid GSTIN. Confirm it on the supplier’s tax invoice.',fix:null},null);
+  const dup=list.find(o=>o!==inv&&o.id!==inv.id&&o.state!=='excluded'&&o.no&&inv.no&&o.no.trim().toLowerCase()===inv.no.trim().toLowerCase()&&o.gstin===inv.gstin&&(o.date<inv.date||(o.date===inv.date&&o.id<inv.id)));
+  if(dup) add({code:'dup',sev:'red',title:'Duplicate invoice number',detail:`Invoice ${inv.no} from this supplier is already recorded on ${dup.date}. Claiming it twice invites a penalty.`,fix:{kind:'exclude',label:'Exclude this bill'}},null);
+  const invRed=issues.some(x=>x.line==null&&x.sev==='red');
+  const lineStatus=li.map(a=>invRed||a.some(x=>x.sev==='red')?'red':a.length?'amber':'ok');
+  let taxable=0,cgst=0,sgst=0,igst=0,okP=0,riskP=0,revP=0;
+  const lineTax=inv.items.map((it,i)=>{
+    const d=P(it.a),t=Math.round(d*(+it.g||0)/100);taxable+=d;
+    if(intra){const c=Math.floor(t/2);cgst+=c;sgst+=t-c;}else igst+=t;
+    const s=lineStatus[i];if(s==='ok')okP+=t;else if(s==='red')riskP+=t;else revP+=(inv.state==='approved'?0:t),okP+=(inv.state==='approved'?t:0);
+    return t;});
+  const worst=(codes)=>{const a=issues.filter(x=>codes.includes(x.code));return a.some(x=>x.sev==='red')?'red':a.length?'amber':'ok';};
+  const sum={math:worst(['math']),hsn:worst(['hsn','slab']),gstin:worst(['gstin']),dup:worst(['dup'])};
+  const status=inv.state==='excluded'?'excluded':issues.some(x=>x.sev==='red')?'red':issues.length?'amber':'ok';
+  return {issues,lineStatus,lineTax,taxable,cgst,sgst,igst,tax:cgst+sgst+igst,total:taxable+cgst+sgst+igst,okP,riskP,revP,sum,status,intra};
+}
+
+/* ===== Demo data (19 purchase bills, Jun–Nov 2026) ===== */
+let _n=0;
+const I=(v,date,no,items,o={})=>({id:'B'+String(++_n).padStart(3,'0'),vendor:v,date,no,gstin:o.gstin||VBY[v].gstin,state:'open',items:items.map(([n,h,q,u,r,g,a,raw])=>({n,h,q,u,r,g,a:a==null?+(q*r).toFixed(2):a,raw:raw||''}))});
+const badG=(()=>{const b=VBY.om.base.replace('3345','3346');return b+VBY.om.gstin[14];})();
+const SEED=[
+ I('sharma','2026-06-04','SHT/2041',[['TMT Sariya 12mm','7214',30,'bundle',3180,18],['Nut-bolt set','7318',200,'pcs',12,18]]),
+ I('gupta','2026-06-11','GCA-118',[['Cement 50kg','2523',100,'bag',372,18]]),
+ I('om','2026-06-19','OE/774',[['Wire 1.5mm','8544',25,'coil',1450,18],['Switch 6A','8536',60,'pcs',85,18]]),
+ I('mahadev','2026-06-27','MSS/9012',[['TMT Sariya 16mm','7214',50,'bundle',3210,18]]),
+ I('sharma','2026-07-05','SHT/2058',[['TMT Sariya 12mm','7214',40,'bundle',3225,18],['Nut-bolt set','7318',150,'pcs',12,18]]),
+ I('gupta','2026-07-14','GCA-131',[['Cement 50kg','2523',120,'bag',375,18]]),
+ I('om','2026-07-22','OE/801',[['Wire 2.5mm','8544',30,'coil',1470,12]]),
+ I('sharma','2026-08-03','SHT/2077',[['Atta 50kg','1101',40,'bag',1180,5]]),
+ I('mahadev','2026-08-12','MSS/9044',[['TMT Sariya 16mm','7214',45,'bundle',3190,18,148550]]),
+ I('gupta','2026-08-21','GCA-142',[['Cement 50kg','2523',90,'bag',378,18]]),
+ I('om','2026-09-02','OE/833',[['Wire 1.5mm','8544',20,'coil',1480,18],['MCB 16A','',12,'pcs',240,18]]),
+ I('sharma','2026-09-15','SHT/2096',[['TMT Sariya 12mm','7214',35,'bundle',3900,18]]),
+ I('om','2026-09-28','OE/851',[['Wire 1.5mm','8544',22,'coil',1490,18]],{gstin:badG}),
+ I('gupta','2026-10-06','GCA-155',[['Cement 50kg','2523',110,'bag',380,18]]),
+ I('sharma','2026-10-18','SHT/2096',[['TMT Sariya 12mm','7214',35,'bundle',3900,18]]),
+ I('mahadev','2026-10-29','MSS/9087',[['TMT Sariya 16mm','7214',55,'bundle',3300,18]]),
+ I('sharma','2026-11-07','SHT/2130',[['TMT Sariya 12mm','7214',30,'bundle',3280,18],['Atta 50kg','1101',30,'bag',1195,5]]),
+ I('gupta','2026-11-15','GCA-168',[['Cement 50kg','2523',100,'bag',382,18]]),
+ I('om','2026-11-20','OE/880',[['Wire 1.5mm','8544',28,'coil',1500,18],['Switch 6A','8536',50,'pcs',85,18]])
+];
+</script>
+
+<script>
+/* ===== UI ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const mLabel=iso=>MON[+iso.slice(5,7)-1]+' '+iso.slice(2,4);
+const dLabel=iso=>iso.slice(8,10)+' '+MON[+iso.slice(5,7)-1]+' '+iso.slice(0,4);
+const IC={dash:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
+ upload:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+ list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',gauge:'<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/>',
+ chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+ file:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'};
+const PAGES=[['dashboard','Dashboard','dash'],['upload','Upload Bill','upload'],['verify','GST Verification','shield'],['transactions','Transactions','list'],['readiness','GST Readiness','gauge'],['insights','Business Insights','chart'],['voice','Bol Ke Entry Banao','mic'],['reports','Reports & Exports','file']];
+const S={page:'dashboard',sel:null,invoices:SEED,draft:null,draftN:0,f:{q:'',month:'all',vendor:'all',status:'all'},vf:'all',fmt:'generic',proc:null,prev:null,cfShown:false};
+const act=()=>S.invoices.filter(i=>i.state!=='excluded');
+const withV=list=>list.map(inv=>({inv,v:verify(inv,S.invoices)}));
+const pill=(s)=>s==='ok'?'<span class="pill ok">✓ Clean</span>':s==='amber'?'<span class="pill amber">! Needs review</span>':s==='red'?'<span class="pill red">✕ Blocked</span>':'<span class="pill grey">Excluded</span>';
+const stateTag=i=>i.state==='approved'?'<span class="pill grey">Approved</span>':i.state==='queued'?'<span class="pill grey">With CA</span>':i.state==='excluded'?'<span class="pill grey">Excluded</span>':'';
+const vname=id=>VBY[id]?VBY[id].name:id;
+
+function metrics(){
+  const a=withV(act());let spend=0,gst=0,ok=0,risk=0,rev=0;
+  a.forEach(({v})=>{spend+=v.total;gst+=v.tax;ok+=v.okP;risk+=v.riskP;rev+=v.revP;});
+  const w={ok:0,amber:0,red:0};a.forEach(({v})=>w[v.status]++);
+  const n=a.length||1,score=Math.round(100*(w.ok+0.6*w.amber)/n);
+  return {a,spend:spend/100,gst:gst/100,ok:ok/100,risk:risk/100,rev:rev/100,w,score,n:a.length};
+}
+function niceMax(m){const raw=m/4||1,mag=Math.pow(10,Math.floor(Math.log10(raw)));const st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=raw);return {st,max:st*4};}
+const short=v=>v>=1e5?(v/1e5).toFixed(v%1e5?1:0)+'L':v>=1e3?(v/1e3)+'K':String(v);
+function monthly(){const m={};withV(act()).forEach(({inv,v})=>{const k=inv.date.slice(0,7);(m[k]=m[k]||{tax:0,base:0});m[k].tax+=v.tax/100;m[k].base+=v.taxable/100;});
+  return Object.keys(m).sort().map(k=>({k,label:MON[+k.slice(5)-1],...m[k]}));}
+function barChart(d){
+  const W=620,H=270,l=54,b=30,t=14,r=10,{st,max}=niceMax(Math.max(...d.map(x=>x.base+x.tax),1));
+  const bw=(W-l-r)/d.length,y=v=>t+(H-t-b)*(1-v/max);let g='';
+  for(let i=0;i<=4;i++){const v=st*i;g+=`<line x1="${l}" x2="${W-r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${l-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--muted)">₹${short(v)}</text>`;}
+  d.forEach((x,i)=>{const cx=l+bw*i+bw*.2,w=bw*.6;
+    g+=`<rect x="${cx}" y="${y(x.base)}" width="${w}" height="${y(0)-y(x.base)}" fill="var(--bar1)"/><rect x="${cx}" y="${y(x.base+x.tax)}" width="${w}" height="${y(x.base)-y(x.base+x.tax)}" fill="var(--bar2)"/>
+    <text x="${cx+w/2}" y="${H-10}" text-anchor="middle" font-size="11.5" fill="var(--muted)">${x.label}</text>`;});
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Monthly purchase spend, taxable value plus GST">${g}</svg>
+  <div class="small muted" style="display:flex;gap:16px;margin-top:6px"><span><i style="display:inline-block;width:10px;height:10px;background:var(--bar1);border-radius:2px"></i> Taxable value</span><span><i style="display:inline-block;width:10px;height:10px;background:var(--bar2);border-radius:2px"></i> GST</span></div>`;
+}
+function ringSVG(score){const r=52,c=2*Math.PI*r,col=score>=85?'var(--ok)':score>=60?'var(--warn)':'var(--bad)';
+  return `<svg viewBox="0 0 130 130" width="130" height="130" role="img" aria-label="GST readiness ${score} out of 100"><circle cx="65" cy="65" r="${r}" fill="none" stroke="var(--soft)" stroke-width="12"/><circle cx="65" cy="65" r="${r}" fill="none" stroke="${col}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c*score/100} ${c}" transform="rotate(-90 65 65)"/><text x="65" y="72" text-anchor="middle" font-family="Space Grotesk" font-size="30" font-weight="700" fill="var(--ink)">${score}</text></svg>`;}
+function priceFlags(){
+  const L=[];act().forEach(inv=>inv.items.forEach(it=>L.push({inv,it})));const out=[];
+  L.forEach(({inv,it})=>{if(!it.h)return;const o=L.filter(x=>x.it.h===it.h&&x.inv!==inv&&x.it.n===it.n);if(o.length<3)return;
+    const avg=o.reduce((s,x)=>s+x.it.r,0)/o.length,pc=(it.r/avg-1)*100;
+    if(Math.abs(pc)>=12)out.push({inv,it,pc,avg});});
+  return out;}
+
+/* ---- pages ---- */
+function pageDashboard(){
+  const m=metrics(),recent=[...m.a].sort((a,b)=>b.inv.date.localeCompare(a.inv.date)).slice(0,6);
+  const reds=m.a.filter(x=>x.v.status==='red'),pf=priceFlags(),badV=[...new Set(m.a.filter(x=>x.v.sum.gstin==='red').map(x=>vname(x.inv.vendor)))];
+  const al=[];
+  reds.slice(0,4).forEach(({inv,v})=>{const i=v.issues.find(x=>x.sev==='red');al.push(`<li><span class="pill red">✕ ${esc(i.code==='dup'?'Duplicate':i.code==='gstin'?'GSTIN':i.code==='slab'?'GST slab':'Math')}</span><div><b>${esc(vname(inv.vendor))} · ${esc(inv.no)}</b><span class="small muted">${esc(i.title)}. ITC at risk ${fmt(v.riskP/100)}.</span></div><button class="btn sm ghost" data-act="open" data-id="${inv.id}">Fix</button></li>`);});
+  pf.slice(0,2).forEach(x=>al.push(`<li><span class="pill amber">! Price</span><div><b>${esc(x.it.n)} at ${fmt0(x.it.r)} from ${esc(vname(x.inv.vendor))}</b><span class="small muted">${Math.abs(x.pc).toFixed(0)}% ${x.pc>0?'above':'below'} the average of ${fmt0(x.avg)} on other bills. Worth a look, not a verdict.</span></div><button class="btn sm ghost" data-act="open" data-id="${x.inv.id}">View</button></li>`));
+  return `<div class="ph"><div><h1>Dashboard</h1><p>AI reads the Kachha. Python protects the Pakka. Figures below come from ${m.n} purchase bills, Jun to Nov 2026.</p></div><button class="btn" data-act="nav" data-p="upload">Upload a bill</button></div>
+  <div class="grid g4">
+   <div class="card kpi"><span class="l">Procurement spend</span><span class="v num">${fmt0(m.spend)}</span><span class="s">Incl. GST, active bills</span></div>
+   <div class="card kpi"><span class="l">GST paid</span><span class="v num">${fmt0(m.gst)}</span><span class="s">${(m.gst/(m.spend-m.gst)*100).toFixed(1)}% of taxable value</span></div>
+   <div class="card kpi good"><span class="l">Verified ITC</span><span class="v num">${fmt0(m.ok)}</span><span class="s">Passed every check</span></div>
+   <div class="card kpi bad"><span class="l">At-Risk ITC</span><span class="v num">${fmt0(m.risk)}</span><span class="s">${m.rev>0?fmt0(m.rev)+' more to verify':'Nothing else pending'}</span></div>
+  </div>
+  <div class="grid g21 mt"><div class="card"><h2>Monthly spending</h2>${barChart(monthly())}</div>
+   <div class="card"><h2>GST readiness</h2><div class="ring">${ringSVG(m.score)}<div><span class="small muted">${m.w.ok} clean · ${m.w.amber} review · ${m.w.red} blocked</span><p style="margin:8px 0"><button class="btn sm ghost" data-act="nav" data-p="readiness">See how to reach 100</button></p></div></div><p class="note" style="margin-top:12px">Illustrative score from the bills recorded here. Not an official GST rating.</p></div></div>
+  <div class="grid g2 mt"><div class="card"><h2>Risk alerts <small>${reds.length} blocked bills${badV.length?' · unverified supplier: '+esc(badV.join(', ')):''}</small></h2>${al.length?`<ul class="alerts">${al.join('')}</ul>`:'<div class="empty">No open alerts. Every active bill passes the checks.</div>'}</div>
+   <div class="card"><h2>Recent transactions</h2><div class="tw"><table><thead><tr><th>Date</th><th>Supplier</th><th class="r">Total</th><th>Status</th></tr></thead><tbody>${recent.map(({inv,v})=>`<tr class="click" data-act="open" data-id="${inv.id}"><td class="num">${dLabel(inv.date)}</td><td>${esc(vname(inv.vendor))}<span class="small muted" style="display:block">${esc(inv.no)}</span></td><td class="r num">${fmt0(v.total/100)}</td><td>${pill(v.status)}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+}
+
+function dropzone(){
+  if(S.proc) return `<div class="card"><h2>Reading ${esc(S.proc.name)}</h2><ul class="steps">${['Preparing image','Vision model reads handwriting into raw tokens','Mapping Hindi / Hinglish names to HSN','Running the Mismatch Shield'].map((t,i)=>`<li class="${i<S.proc.step?'done':i===S.proc.step?'on':''}">${i<S.proc.step?'✓':i===S.proc.step?'<span class="spin"></span>':'·'} ${t}</li>`).join('')}</ul></div>`;
+  return `<div class="drop" id="drop"><b>Drop a bill photo or PDF here</b><p class="muted" style="margin:6px 0 14px">JPG, PNG or PDF. Hindi, Hinglish or English slips.</p><input type="file" id="file" accept="image/*,application/pdf" hidden><button class="btn" data-act="pick">Choose file</button> <button class="btn ghost" data-act="sample">Use a sample slip</button></div>
+  <p class="note" style="margin-top:12px">Demo mode: the Ollama vision service is not connected here, so any file you add loads the same sample extraction. Nothing is read from your file. In the full project this step calls the backend extractor, which returns raw text only; every number below is then checked by the Python engine.</p>`;
+}
+function pageUpload(){
+  const d=S.draft&&S.draft.src==='upload';
+  return `<div class="ph"><div><h1>Upload Bill</h1><p>Upload, correct anything the reader got wrong, then approve or send to the CA queue.</p></div></div>${d?editor(S.draft,true)+'':dropzone()}`;
+}
+
+function lineCell(v,i,it){const s=v.lineStatus[i];return `${fmt(v.lineTax[i]/100)}<div style="margin-top:3px">${pill(s)}</div>`;}
+function bottomHTML(inv,v,isDraft){
+  const sm=v.sum,tile=(k,t,s,ok,bad)=>`<div class="chk ${s==='ok'?'':s}"><b>${t}</b>${pill(s)}<span class="small muted">${s==='ok'?ok:bad}</span></div>`;
+  const iss=v.issues.map(x=>`<div class="iss"><span class="pill ${x.sev==='red'?'red':'amber'}">${x.sev==='red'?'✕':'!'}</span><div><b>${esc(x.title)}${x.line!=null?` <span class="muted small">(line ${x.line+1})</span>`:''}</b><span class="small muted">${esc(x.detail)}</span></div>${x.fix?`<button class="btn sm ghost" data-act="fix" data-k="${x.fix.kind}" data-l="${x.fix.line==null?'':x.fix.line}" data-v="${esc(x.fix.value==null?'':x.fix.value)}">${esc(x.fix.label)}</button>`:'<span></span>'}</div>`).join('');
+  const hasRed=v.issues.some(x=>x.sev==='red');
+  const acts=isDraft?`<button class="btn" data-act="dsave" data-s="approved" ${hasRed?'disabled title="Fix blocked issues first, or send to the CA queue"':''}>Approve and add</button> <button class="btn ghost" data-act="dsave" data-s="queued">Send to CA queue</button> <button class="btn ghost" data-act="ddiscard">Discard</button>`
+   :inv.state==='excluded'?`<button class="btn ghost" data-act="state" data-s="open">Restore bill</button>`
+   :`<button class="btn" data-act="state" data-s="approved" ${hasRed?'disabled title="Fix blocked issues first, or send to the CA queue"':''}>Approve</button> <button class="btn ghost" data-act="state" data-s="queued">Send to CA queue</button>${inv.state!=='open'?' <button class="btn ghost" data-act="state" data-s="open">Reopen</button>':''}`;
+  return `<div class="checks">${tile('math','Arithmetic',sm.math,'Qty × rate matches every line','Amount differs from qty × rate')}${tile('hsn','HSN and GST slab',sm.hsn,'Rates match the table','HSN or slab needs attention')}${tile('g','GSTIN',sm.gstin,'Format and check character valid','Failed validation')}${tile('d','Duplicate bill',sm.dup,'No repeat of this number','Same number already recorded')}</div>
+  <div class="mt">${iss||'<p class="muted" style="margin:0">No issues found. This bill’s tax can be claimed as ITC.</p>'}</div>
+  <div class="tot"><div><span>Taxable value</span><b class="num">${fmt(v.taxable/100)}</b></div><div><span>${v.intra?'CGST':'IGST'}</span><b class="num">${fmt((v.intra?v.cgst:v.igst)/100)}</b></div><div><span>${v.intra?'SGST':'CGST / SGST'}</span><b class="num">${v.intra?fmt(v.sgst/100):'—'}</b></div><div><span>Invoice total</span><b class="num">${fmt(v.total/100)}</b></div><div><span>Verified ITC</span><b class="num" style="color:var(--ok)">${fmt(v.okP/100)}</b></div><div><span>At-Risk ITC</span><b class="num" style="color:${v.riskP?'var(--bad)':'inherit'}">${fmt(v.riskP/100)}</b></div></div>
+  <p class="small muted" style="margin:10px 0 0">At-Risk ITC here means the tax on lines or bills that fail a red check, using the rules above. Confirm with your CA before filing. Place of supply is taken from the first two GSTIN digits (buyer is in Delhi, 07).</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">${acts}</div>`;
+}
+function editor(inv,isDraft){
+  const v=verify(inv,S.invoices),id=inv.id;
+  const rows=inv.items.map((it,i)=>`<tr><td style="min-width:190px"><input class="c" data-f="n" data-l="${i}" value="${esc(it.n)}" aria-label="Item ${i+1}">${it.raw?`<span class="raw">As written: ${esc(it.raw)}</span>`:''}</td>
+   <td><input class="c w-m" data-f="h" data-l="${i}" value="${esc(it.h)}" aria-label="HSN"></td><td><input class="c w-s num" data-f="q" data-l="${i}" value="${esc(it.q)}" aria-label="Quantity"></td><td><input class="c w-s" data-f="u" data-l="${i}" value="${esc(it.u)}" aria-label="Unit"></td>
+   <td><input class="c w-m num" data-f="r" data-l="${i}" value="${esc(it.r)}" aria-label="Rate"></td><td><input class="c w-m num" data-f="a" data-l="${i}" value="${esc(it.a)}" aria-label="Amount on slip"></td><td><input class="c w-s num" data-f="g" data-l="${i}" value="${esc(it.g)}" aria-label="GST percent"></td>
+   <td class="num lc" data-l="${i}">${lineCell(v,i,it)}</td><td><button class="btn sm ghost" data-act="delline" data-l="${i}" aria-label="Remove line ${i+1}">✕</button></td></tr>`).join('');
+  return `<div class="card" id="ed" data-inv="${isDraft?'draft':id}"><div class="hdr">
+    <label>Supplier<select data-f="vendor">${VENDORS.map(x=>`<option value="${x.id}" ${x.id===inv.vendor?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
+    <label>Supplier GSTIN<input data-f="gstin" value="${esc(inv.gstin)}" maxlength="15" class="num"></label>
+    <label>Invoice no.<input data-f="no" value="${esc(inv.no)}"></label>
+    <label>Date<input type="date" data-f="date" value="${esc(inv.date)}"></label></div>
+   <div class="tw"><table><thead><tr><th>Item</th><th>HSN</th><th>Qty</th><th>Unit</th><th>Rate (₹)</th><th>Amount on slip (₹)</th><th>GST %</th><th>Tax and check</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+   <p style="margin:8px 0 14px"><button class="btn sm ghost" data-act="addline">+ Add line</button> ${isDraft?'':stateTag(inv)}</p>
+   <div id="ed-bottom">${bottomHTML(inv,v,isDraft)}</div></div>`;
+}
+function curInv(){const e=$('#ed');if(!e)return null;return e.dataset.inv==='draft'?S.draft:S.invoices.find(i=>i.id===e.dataset.inv);}
+function refreshEditor(){const inv=curInv();if(!inv)return;const v=verify(inv,S.invoices);
+  $('#ed-bottom').innerHTML=bottomHTML(inv,v,inv===S.draft);
+  document.querySelectorAll('#ed .lc').forEach(td=>{const i=+td.dataset.l;if(inv.items[i])td.innerHTML=lineCell(v,i,inv.items[i]);});badges();}
+
+function pageVerify(){
+  const all=withV(S.invoices);if(!S.sel||!S.invoices.find(i=>i.id===S.sel))S.sel=(all.find(x=>x.v.status==='red')||all[0]).inv.id;
+  const shown=all.filter(x=>S.vf==='all'||x.v.status===S.vf||(S.vf==='queued'&&x.inv.state==='queued'));const inv=S.invoices.find(i=>i.id===S.sel);
+  return `<div class="ph"><div><h1>GST Verification</h1><p>The Deterministic Mismatch Shield. Plain code checks arithmetic, slabs, GSTINs and duplicates. A model never does the maths.</p></div></div>
+  <div class="split"><div class="card" style="padding:12px"><div class="chips" style="margin-bottom:10px">${[['all','All'],['red','Blocked'],['amber','Review'],['ok','Clean']].map(([k,l])=>`<button class="chip" aria-pressed="${S.vf===k}" data-act="vf" data-v="${k}">${l}</button>`).join('')}</div>
+   <div class="list">${shown.length?shown.map(({inv:i,v})=>`<button data-act="sel" data-id="${i.id}" aria-current="${i.id===S.sel}"><span>${esc(vname(i.vendor))}</span>${pill(v.status)}<span class="small muted">${esc(i.no)} · ${dLabel(i.date)}</span><span class="small muted num" style="text-align:right">${fmt0(v.total/100)}</span></button>`).join(''):'<div class="empty">No bills match this filter.</div>'}</div></div>
+   <div style="min-width:0">${editor(inv,false)}</div></div>`;
+}
+
+function txFiltered(){const f=S.f,q=f.q.trim().toLowerCase();
+  return withV(S.invoices).filter(({inv,v})=>(f.month==='all'||inv.date.slice(0,7)===f.month)&&(f.vendor==='all'||inv.vendor===f.vendor)&&(f.status==='all'||v.status===f.status)&&(!q||(vname(inv.vendor)+' '+inv.no+' '+inv.items.map(i=>i.n).join(' ')).toLowerCase().includes(q))).sort((a,b)=>b.inv.date.localeCompare(a.inv.date));}
+function txRows(){const r=txFiltered();if(!r.length)return `<tr><td colspan="8"><div class="empty">No transactions match these filters. Clear the search or pick another month.</div></td></tr>`;
+  return r.map(({inv,v})=>`<tr class="click" data-act="open" data-id="${inv.id}"><td class="num">${dLabel(inv.date)}</td><td>${esc(inv.no)}</td><td>${esc(vname(inv.vendor))}</td><td class="small muted">${esc(inv.items.map(i=>i.n).join(', '))}</td><td class="r num">${fmt(v.taxable/100)}</td><td class="r num">${fmt(v.tax/100)}</td><td>${pill(v.status)} ${stateTag(inv)}</td><td class="r num">${fmt(v.total/100)}</td></tr>`).join('');}
+function pageTx(){const months=[...new Set(S.invoices.map(i=>i.date.slice(0,7)))].sort();
+  return `<div class="ph"><div><h1>Transactions</h1><p>Every purchase bill. Open one to correct it.</p></div></div><div class="card">
+  <div class="toolbar"><input id="q" type="search" placeholder="Search supplier, invoice no. or item" value="${esc(S.f.q)}" aria-label="Search">
+   <select id="fm" aria-label="Month"><option value="all">All months</option>${months.map(m=>`<option value="${m}" ${S.f.month===m?'selected':''}>${mLabel(m+'-01')}</option>`).join('')}</select>
+   <select id="fv" aria-label="Supplier"><option value="all">All suppliers</option>${VENDORS.map(x=>`<option value="${x.id}" ${S.f.vendor===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
+   <select id="fs" aria-label="Status">${[['all','Any status'],['ok','Clean'],['amber','Needs review'],['red','Blocked'],['excluded','Excluded']].map(([k,l])=>`<option value="${k}" ${S.f.status===k?'selected':''}>${l}</option>`).join('')}</select></div>
+  <div class="tw"><table><thead><tr><th>Date</th><th>Invoice</th><th>Supplier</th><th>Items</th><th class="r">Taxable</th><th class="r">GST</th><th>Status</th><th class="r">Total</th></tr></thead><tbody id="txb">${txRows()}</tbody></table></div></div>`;}
+
+function pageReadiness(){
+  const m=metrics(),n=m.n||1,gains=[];
+  m.a.forEach(({inv,v})=>{if(v.status==='ok')return;const w=v.status==='amber'?0.6:0,g=(1-w)/n*100,top=v.issues[0];gains.push({inv,g,t:top.title,fix:top.fix,sev:v.status});});
+  gains.sort((a,b)=>b.g-a.g);const q=m.a.filter(x=>x.inv.state==='queued'&&x.v.status!=='ok').length;
+  return `<div class="ph"><div><h1>GST Readiness</h1><p>A monthly-style health score for your purchase records. It rises as you correct bills.</p></div></div>
+  <div class="grid g21"><div class="card"><div class="ring">${ringSVG(m.score)}<div><div class="score num">${m.score}<span class="muted" style="font-size:18px">/100</span></div><p class="muted" style="margin:6px 0 0">${m.score===100?'Every active bill is clean.':`${gains.length} bill${gains.length>1?'s':''} still ${gains.length>1?'need':'needs'} attention.`}</p></div></div>
+   <div class="grid g3 mt" style="gap:10px"><div class="chk"><b>Clean</b><span class="num" style="font-size:22px;font-family:var(--f-head)">${m.w.ok}</span></div><div class="chk"><b>Needs review</b><span class="num" style="font-size:22px;font-family:var(--f-head)">${m.w.amber}</span></div><div class="chk"><b>Blocked</b><span class="num" style="font-size:22px;font-family:var(--f-head)">${m.w.red}</span></div></div>
+   <p class="note mt">Score = clean bills count 1, bills needing review 0.6, blocked bills 0, averaged over active bills. ${q?q+' unresolved bill'+(q>1?'s are':' is')+' sitting with the CA queue.':''} Illustrative only, not an official GST compliance rating.</p></div>
+   <div class="card"><h2>${m.score===100?'All clear':'Fix these next'}</h2>${gains.length?gains.slice(0,6).map(x=>`<div class="iss"><span class="pill ${x.sev==='red'?'red':'amber'}">+${x.g.toFixed(1)}</span><div><b>${esc(vname(x.inv.vendor))} · ${esc(x.inv.no)}</b><span class="small muted">${esc(x.t)}</span></div><button class="btn sm ghost" data-act="open" data-id="${x.inv.id}">Fix</button></div>`).join(''):'<div class="empty">Nothing left to fix this period.</div>'}</div></div>`;
+}
+
+function pageInsights(){
+  const a=withV(act()),com={},sup={};
+  a.forEach(({inv,v})=>{inv.items.forEach((it,i)=>{const k=HSN[it.h]?ALIAS_NAME[it.h]:(it.n||'Other');const c=com[k]=com[k]||{s:0,q:0,u:it.u};c.s+=P(it.a)/100;c.q+=+it.q;});
+    const s=sup[inv.vendor]=sup[inv.vendor]||{s:0,n:0};s.s+=v.total/100;s.n++;});
+  const cl=Object.entries(com).sort((x,y)=>y[1].s-x[1].s),sl=Object.entries(sup).sort((x,y)=>y[1].s-x[1].s);
+  const bars=(arr,fm,sub)=>{const mx=Math.max(...arr.map(x=>x[1].s),1);return arr.map(([k,o])=>`<div class="bar"><span>${esc(fm(k))}</span><span class="t"><i style="width:${o.s/mx*100}%"></i></span><span class="num small">${fmt0(o.s)}<span class="muted"> · ${sub(o)}</span></span></div>`).join('');};
+  const d=s=>{const x=new Date(s);return x.getTime();},T=d(TODAY),day=864e5;
+  const inR=(lo,hi)=>a.filter(({inv})=>{const t=T-d(inv.date);return t>=lo*day&&t<hi*day;}).reduce((s,x)=>s+x.v.total/100,0);
+  const cur=inR(0,30),prev=inR(30,60),ch=prev?(cur/prev-1)*100:0,pf=priceFlags();
+  return `<div class="ph"><div><h1>Business Insights</h1><p>What the bills say about your buying. Warnings give a reason and leave the decision to you.</p></div></div>
+  <div class="grid g3"><div class="card kpi"><span class="l">Spend, last 30 days</span><span class="v num">${fmt0(cur)}</span><span class="s">to 24 Nov 2026</span></div><div class="card kpi"><span class="l">Previous 30 days</span><span class="v num">${fmt0(prev)}</span><span class="s">${prev?(ch>=0?'+':'')+ch.toFixed(0)+'% change in spending velocity':'No earlier bills'}</span></div><div class="card kpi"><span class="l">Active suppliers</span><span class="v num">${sl.length}</span><span class="s">${a.length} bills</span></div></div>
+  <div class="grid g2 mt"><div class="card"><h2>Top purchased commodities</h2>${bars(cl,k=>k,o=>`${Math.round(o.q).toLocaleString('en-IN')} ${o.u}`)}</div><div class="card"><h2>Top suppliers</h2>${bars(sl,k=>vname(k),o=>o.n+' bills')}</div></div>
+  <div class="card mt"><h2>Suspicious price variations</h2>${pf.length?`<div class="tw"><table><thead><tr><th>Bill</th><th>Item</th><th class="r">Rate</th><th class="r">Average elsewhere</th><th class="r">Difference</th></tr></thead><tbody>${pf.map(x=>`<tr class="click" data-act="open" data-id="${x.inv.id}"><td>${esc(vname(x.inv.vendor))} · ${esc(x.inv.no)}<span class="small muted" style="display:block">${dLabel(x.inv.date)}</span></td><td>${esc(x.it.n)}</td><td class="r num">${fmt0(x.it.r)}</td><td class="r num">${fmt0(x.avg)}</td><td class="r num">${x.pc>0?'+':''}${x.pc.toFixed(0)}%</td></tr>`).join('')}</tbody></table></div><p class="small muted" style="margin:10px 0 0">A rate 12% or more away from the average of at least three other bills for the same item. This can be a typo, a grade change or a real price move.</p>`:'<div class="empty">No unusual rates found.</div>'}</div>`;
+}
+
+function pageVoice(){
+  const d=S.draft&&S.draft.src==='voice';
+  return `<div class="ph"><div><h1>Bol Ke Entry Banao</h1><p>Say the purchase in Hindi or Hinglish. It becomes a bill you can check and correct.</p></div></div>
+  <div class="card"><label for="vt" class="small muted">What the shopkeeper says</label><textarea id="vt" rows="2" placeholder="Maine Sharma ji se 10 bundle sariya 600 rupay me kharida aur 5 kilo taar 90 rupay me">${esc(S.vt||'')}</textarea>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="btn" data-act="vparse">Make the bill</button><button class="btn ghost" data-act="vex">Try the example</button></div>
+   <p class="note" style="margin-top:12px">The microphone is not available in this preview, so type or paste the sentence. A live version would hand the speech transcript to this same step.</p></div>
+  ${d?`<div class="card mt"><h2>Voice correction</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="vf" style="flex:1 1 240px" placeholder="Sariya ka tax 18 percent kardo" aria-label="Voice correction"><button class="btn ghost" data-act="vfix">Apply</button></div></div><div class="mt">${editor(S.draft,true)}</div>`:''}`;
+}
+function parseVoice(t){
+  const s=t.toLowerCase().replace(/[,.!?]/g,' '),vm=s.match(/([a-z]+)\s+ji\s+se/);let vendor='sharma';
+  if(vm){const f=VENDORS.find(v=>v.name.toLowerCase().startsWith(vm[1])||v.id===vm[1]);if(f)vendor=f.id;}
+  const items=[],bad=[];
+  s.split(/\baur\b/).forEach(seg=>{const m=seg.match(/(\d+(?:\.\d+)?)\s*(bundle|kilo|kg|bori|bag|meter|piece|pcs|coil)?\s+([a-z]+)\s+(\d+(?:\.\d+)?)\s*(?:rupay|rupaye|rupees|rs)/);
+    if(!m){if(seg.trim().length>3)bad.push(seg.trim());return;}
+    const h=ALIAS[m[3]]||'',u={kilo:'kg',bori:'bag',piece:'pcs'}[m[2]]||m[2]||'pcs',q=+m[1],r=+m[4];
+    items.push({n:h?ALIAS_NAME[h]:m[3],h,q,u,r,g:h?HSN[h].r:18,a:+(q*r).toFixed(2),raw:m[0].trim()});});
+  return {vendor,items,bad};
+}
+
+function csvFor(){
+  const rows=withV(act()).filter(({inv,v})=>!v.issues.some(x=>x.sev==='red')&&(v.status==='ok'||inv.state==='approved')).sort((a,b)=>a.inv.date.localeCompare(b.inv.date));
+  const q=x=>'"'+String(x).replace(/"/g,'""')+'"',out=[];let hd;
+  if(S.fmt==='generic'){hd=['Invoice No','Date','Supplier','GSTIN','HSN','Item','Qty','Unit','Rate','Taxable Value','GST %','CGST','SGST','IGST','Line Total'];
+    rows.forEach(({inv,v})=>inv.items.forEach((it,i)=>{const t=v.lineTax[i],d=P(it.a),c=v.intra?Math.floor(t/2):0,s=v.intra?t-c:0,g=v.intra?0:t;out.push([inv.no,inv.date,vname(inv.vendor),inv.gstin,it.h,it.n,it.q,it.u,it.r,d/100,it.g,c/100,s/100,g/100,(d+t)/100]);}));}
+  else if(S.fmt==='tally'){hd=['Voucher Type','Voucher Date','Voucher No','Party Name','Party GSTIN','Item','HSN','Quantity','Rate','Amount','GST Rate','CGST','SGST','IGST'];
+    rows.forEach(({inv,v})=>inv.items.forEach((it,i)=>{const t=v.lineTax[i],c=v.intra?Math.floor(t/2):0,s=v.intra?t-c:0,g=v.intra?0:t;out.push(['Purchase',inv.date.split('-').reverse().join('-'),inv.no,vname(inv.vendor),inv.gstin,it.n,it.h,it.q+' '+it.u,it.r,P(it.a)/100,it.g,c/100,s/100,g/100]);}));}
+  else{hd=['GSTIN of Supplier','Invoice Number','Invoice Date','Invoice Value','Place of Supply','Rate','Taxable Value','Integrated Tax','Central Tax','State/UT Tax','Cess'];
+    rows.forEach(({inv,v})=>{const by={};inv.items.forEach((it,i)=>{const k=it.g;const o=by[k]=by[k]||{d:0,t:0};o.d+=P(it.a);o.t+=v.lineTax[i];});
+      Object.entries(by).forEach(([r,o])=>{const c=v.intra?Math.floor(o.t/2):0;out.push([inv.gstin,inv.no,inv.date.split('-').reverse().join('-'),v.total/100,(inv.gstin||'').slice(0,2),r,o.d/100,v.intra?0:o.t/100,c/100,v.intra?(o.t-c)/100:0,0]);});});}
+  return {n:rows.length,lines:out.length,text:[hd.map(q).join(','),...out.map(r=>r.map(q).join(','))].join('\n')};
+}
+function pageReports(){
+  const c=csvFor(),ex=withV(act()).filter(({v})=>v.issues.length);
+  return `<div class="ph"><div><h1>Reports & Exports</h1><p>Two buckets: bills ready to file, and bills your CA needs to see.</p></div></div>
+  <div class="card"><h2>Verified invoices <small>${c.n} bills, ${c.lines} rows</small></h2>
+   <div class="chips" style="margin-bottom:10px">${[['generic','Generic CSV'],['tally','Tally-style'],['cleartax','ClearTax-style']].map(([k,l])=>`<button class="chip" aria-pressed="${S.fmt===k}" data-act="fmt" data-v="${k}">${l}</button>`).join('')}</div>
+   <textarea id="csv" rows="7" readonly aria-label="CSV export" style="font-family:ui-monospace,monospace;font-size:12px">${esc(c.text)}</textarea>
+   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" data-act="copycsv">Copy CSV</button></div>
+   <p class="note" style="margin-top:12px">Downloads are blocked inside this preview, so copy the text into a .csv file. Column layouts approximate each tool’s import format; check against the current template before importing. GSTR-2B reconciliation needs your downloaded 2B file and is not part of this demo.</p></div>
+  <div class="card mt"><h2>CA exception queue <small>${ex.length} bills</small></h2>${ex.length?ex.map(({inv,v})=>`<div class="iss" style="grid-template-columns:auto 1fr auto"><span>${pill(v.status)}</span><div><b>${esc(vname(inv.vendor))} · ${esc(inv.no)} <span class="muted small">${dLabel(inv.date)} · ${fmt(v.total/100)} ${inv.state==='queued'?'· sent to CA':''}</span></b>${v.issues.map(x=>`<span class="small muted" style="display:block">• ${esc(x.title)}. ${x.fix?'Suggested fix: '+esc(x.fix.label)+'.':'Needs the supplier’s original bill.'}</span>`).join('')}<span class="small muted">Original slip: scan not stored in demo mode.</span></div><button class="btn sm ghost" data-act="open" data-id="${inv.id}">Open</button></div>`).join(''):'<div class="empty">The queue is empty. Every active bill is clean.</div>'}</div>`;
+}
+
+/* ---- shell ---- */
+const VIEWS={dashboard:pageDashboard,upload:pageUpload,verify:pageVerify,transactions:pageTx,readiness:pageReadiness,insights:pageInsights,voice:pageVoice,reports:pageReports};
+function badges(){const m=metrics();const b=document.querySelector('[data-bd="verify"]');if(b)b.textContent=m.w.red||'';}
+function renderNav(){$('#nav').innerHTML=PAGES.map(([k,l,i])=>`<button data-act="nav" data-p="${k}" ${S.page===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${IC[i]}</svg>${l}${k==='verify'?'<span class="bd" data-bd="verify"></span>':''}</button>`).join('');badges();}
+function render(){
+  renderNav();$('#main').innerHTML=VIEWS[S.page]();
+  const m=metrics();if(S.prev!=null&&S.prev<100&&m.score===100)confetti();S.prev=m.score;
+  if(S.page==='readiness'&&m.score===100&&!S.cfShown){S.cfShown=true;confetti();}
+  const dz=$('#drop');if(dz){['dragover','dragenter'].forEach(e=>dz.addEventListener(e,ev=>{ev.preventDefault();dz.classList.add('over');}));['dragleave','drop'].forEach(e=>dz.addEventListener(e,()=>dz.classList.remove('over')));dz.addEventListener('drop',ev=>{ev.preventDefault();const f=ev.dataTransfer.files[0];if(f)startProc(f.name);});$('#file').addEventListener('change',ev=>{const f=ev.target.files[0];if(f)startProc(f.name);});}
+}
+function go(p){S.page=p;if(location.hash!=='#'+p)location.hash=p;render();window.scrollTo(0,0);}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600);}
+
+function startProc(name){S.proc={name,step:0};render();const adv=()=>{if(!S.proc)return;S.proc.step++;if(S.proc.step>=4){S.proc=null;makeSample(true);return;}render();setTimeout(adv,650);};setTimeout(adv,650);}
+function makeSample(){S.draft={id:'draft',src:'upload',vendor:'sharma',gstin:VBY.sharma.gstin,no:'SHT/2142',date:TODAY,state:'open',items:[
+ {n:'TMT Sariya 12mm',h:'7214',q:20,u:'bundle',r:3290,g:18,a:65800,raw:'सरिया १२ मिमी — 20 bundle × 3290'},
+ {n:'Electrical wire 1.5mm',h:'8544',q:10,u:'coil',r:1480,g:12,a:14800,raw:'taar 1.5 — 10 coil @1480'},
+ {n:'Atta 50kg',h:'1101',q:10,u:'bag',r:1190,g:5,a:11900,raw:'aata 50kg bori — 10'},
+ {n:'Nails 3 inch',h:'',q:25,u:'kg',r:78,g:18,a:1950,raw:'keel 3"'}]};render();}
+
+function confetti(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const c=$('#cf'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+  const cols=['#20A574','#145C43','#F2B84B','#E8553F','#7FD1AE'],ps=Array.from({length:140},()=>({x:innerWidth/2+(Math.random()-.5)*200,y:innerHeight*.35,vx:(Math.random()-.5)*14,vy:-Math.random()*13-3,s:5+Math.random()*6,c:cols[Math.random()*5|0],r:Math.random()*6,vr:(Math.random()-.5)*.4}));
+  let f=0;(function tick(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/3,p.s,p.s*.6);x.restore();});if(++f<150)requestAnimationFrame(tick);else x.clearRect(0,0,c.width,c.height);})();}
+
+/* ---- events ---- */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,d=b.dataset;
+  if(a==='nav')go(d.p);
+  else if(a==='open'){S.sel=d.id;go('verify');}
+  else if(a==='sel'){S.sel=d.id;render();}
+  else if(a==='vf'){S.vf=d.v;render();}
+  else if(a==='pick')$('#file').click();
+  else if(a==='sample')startProc('sample-slip.jpg');
+  else if(a==='addline'){const inv=curInv();inv.items.push({n:'',h:'',q:1,u:'pcs',r:0,g:18,a:0,raw:''});render();}
+  else if(a==='delline'){const inv=curInv();inv.items.splice(+d.l,1);render();}
+  else if(a==='fix'){const inv=curInv(),k=d.k,l=+d.l;
+    if(k==='gst')inv.items[l].g=+d.v;else if(k==='amount')inv.items[l].a=+(inv.items[l].q*inv.items[l].r).toFixed(2);else if(k==='hsn')inv.items[l].h=d.v;else if(k==='exclude'){inv.state='excluded';toast('Bill excluded from totals');}
+    render();}
+  else if(a==='state'){const inv=curInv();inv.state=d.s;toast(d.s==='approved'?'Approved':d.s==='queued'?'Sent to CA queue':'Updated');render();}
+  else if(a==='dsave'){const inv=S.draft;inv.id='U'+String(++S.draftN).padStart(3,'0');inv.state=d.s;delete inv.src;S.invoices.push(inv);S.sel=inv.id;S.draft=null;toast(d.s==='approved'?'Approved and added to Transactions':'Added and sent to the CA queue');go('verify');}
+  else if(a==='ddiscard'){S.draft=null;render();}
+  else if(a==='vex'){S.vt='Maine Sharma ji se 10 bundle sariya 600 rupay me kharida aur 5 kilo taar 90 rupay me';render();}
+  else if(a==='vparse'){const t=$('#vt').value;S.vt=t;const r=parseVoice(t);
+    if(!r.items.length){toast('Could not find an item. Say quantity, item and rate, like "5 kilo taar 90 rupay me".');return;}
+    S.draft={id:'draft',src:'voice',vendor:r.vendor,gstin:VBY[r.vendor].gstin,no:'VOICE-'+String(S.draftN+1).padStart(3,'0'),date:TODAY,state:'open',items:r.items};
+    toast(r.bad.length?'Made the bill. Skipped: "'+r.bad[0]+'"':'Bill drafted from your sentence');render();}
+  else if(a==='vfix'){const t=$('#vf').value.toLowerCase(),m=t.match(/([a-z]+)\s+ka\s+(?:tax|gst)\s+(\d+(?:\.\d+)?)\s*(?:percent|%)/);
+    if(!m){toast('Try: "Sariya ka tax 18 percent kardo"');return;}const h=ALIAS[m[1]];const hit=S.draft.items.filter(i=>(h&&i.h===h)||i.n.toLowerCase().includes(m[1]));
+    if(!hit.length){toast('No item called "'+m[1]+'" on this bill');return;}hit.forEach(i=>i.g=+m[2]);toast(m[1]+' GST set to '+m[2]+'%');render();}
+  else if(a==='fmt'){S.fmt=d.v;render();}
+  else if(a==='copycsv'){const ta=$('#csv');ta.focus();ta.select();(navigator.clipboard?navigator.clipboard.writeText(ta.value):Promise.reject()).then(()=>toast('CSV copied'),()=>{try{document.execCommand('copy');toast('CSV copied');}catch(_){toast('Select the text and copy it');}});}
+});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.f){const inv=curInv();if(!inv)return;const f=t.dataset.f;
+    if(t.dataset.l!==undefined){const it=inv.items[+t.dataset.l];it[f]=['q','r','a','g'].includes(f)?(parseFloat(t.value)||0):t.value;
+      if(f==='h'||f==='n'){if(!it.h&&f==='n'){const g=guessHsn(it.n);if(g){it.h=g;it.g=HSN[g].r;render();return;}}}
+      if(f==='q'||f==='r'){const calc=+(it.q*it.r).toFixed(2);if(Math.abs(it.a-calc)<0.005||it.a===0){it.a=calc;t.closest('tr').querySelector('[data-f="a"]').value=calc;}}}
+    else{inv[f]=f==='gstin'?t.value.trim().toUpperCase():t.value;if(f==='gstin')t.value=inv.gstin;if(f==='vendor'){inv.gstin=VBY[inv.vendor].gstin;const g=document.querySelector('[data-f="gstin"]');if(g)g.value=inv.gstin;}}
+    refreshEditor();return;}
+  if(t.id==='fm'){S.f.month=t.value;$('#txb').innerHTML=txRows();}
+  if(t.id==='fv'){S.f.vendor=t.value;$('#txb').innerHTML=txRows();}
+  if(t.id==='fs'){S.f.status=t.value;$('#txb').innerHTML=txRows();}
+});
+document.addEventListener('input',e=>{if(e.target.id==='q'){S.f.q=e.target.value;$('#txb').innerHTML=txRows();}});
+addEventListener('hashchange',()=>{const p=location.hash.slice(1);if(VIEWS[p]&&p!==S.page){S.page=p;render();}});
+(function init(){const p=location.hash.slice(1);if(VIEWS[p])S.page=p;render();})();
+</script>
+
+</body></html>
